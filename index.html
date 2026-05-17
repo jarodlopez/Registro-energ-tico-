@@ -10,7 +10,7 @@
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans h-screen flex flex-col">
 
-    <div id="login-screen" class="flex-1 flex items-center justify-center bg-slate-900">
+    <div id="login-screen" class="flex-1 flex items-center justify-center bg-slate-900 z-50 fixed inset-0">
         <div class="max-w-md w-full p-8 bg-white rounded-2xl shadow-2xl">
             <div class="text-center mb-8">
                 <i class="fa-solid fa-bolt text-4xl text-yellow-500 mb-3"></i>
@@ -41,9 +41,14 @@
                 <i class="fa-solid fa-bolt text-yellow-500 text-xl"></i>
                 <h1 class="text-xl font-bold text-slate-800">EcoTrack <span class="text-blue-600">Pro</span></h1>
             </div>
-            <button id="logout-btn" class="text-sm px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg font-semibold transition-all">
-                <i class="fa-solid fa-right-from-bracket mr-2"></i>Cerrar Sesión
-            </button>
+            <div class="flex gap-4">
+                <button id="btn-config-recibo" class="text-sm px-4 py-2 text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg font-semibold transition-all">
+                    <i class="fa-solid fa-file-invoice mr-2"></i>Añadir Nuevo Recibo
+                </button>
+                <button id="logout-btn" class="text-sm px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg font-semibold transition-all hidden md:block">
+                    <i class="fa-solid fa-right-from-bracket mr-2"></i>Cerrar Sesión
+                </button>
+            </div>
         </header>
 
         <main class="flex-1 overflow-y-auto p-4 md:p-8 max-w-7xl mx-auto w-full space-y-6">
@@ -61,7 +66,7 @@
                     <p class="text-sm font-bold text-slate-500 uppercase tracking-wider">Gasto Acumulado</p>
                     <p class="text-3xl font-black text-slate-800 mt-2" id="current-cost">C$ 0.00</p>
                     <p class="text-sm mt-2 font-medium" id="current-consumption">
-                        <span class="text-blue-600 bg-blue-50 px-2 py-1 rounded">0 kWh</span> este mes
+                        <span class="text-blue-600 bg-blue-50 px-2 py-1 rounded">0 kWh</span> este ciclo
                     </p>
                 </div>
 
@@ -71,29 +76,30 @@
                         <p class="text-3xl font-black text-slate-800" id="avg-kwh">0</p>
                         <p class="text-slate-500 font-medium">kWh/día</p>
                     </div>
-                    <p class="text-sm mt-2 text-slate-600 font-medium border-t border-slate-100 pt-2" id="avg-cost">~ C$ 0.00 / día</p>
+                    <p class="text-sm mt-2 text-slate-600 font-medium border-t border-slate-100 pt-2" id="dias-ciclo">Días transcurridos: 0</p>
                 </div>
 
                 <div class="bg-slate-800 p-6 rounded-2xl shadow-sm text-white">
-                    <p class="text-sm font-bold text-slate-400 uppercase tracking-wider">Proyección 30 Días</p>
+                    <p class="text-sm font-bold text-slate-400 uppercase tracking-wider">Proyección a 30 Días</p>
                     <p class="text-3xl font-black text-yellow-400 mt-2" id="projected-cost">C$ 0.00</p>
-                    <p class="text-sm mt-2 text-slate-300">Si mantienes este ritmo</p>
+                    <p class="text-sm mt-2 text-slate-300" id="projected-kwh">~ 0 kWh al mes</p>
                 </div>
 
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <p class="text-sm font-bold text-slate-500 uppercase tracking-wider">Lectura Anterior</p>
-                    <p class="text-3xl font-black text-slate-800 mt-2">14,612</p>
-                    <p class="text-sm mt-2 text-slate-500 border-t border-slate-100 pt-2">Factura de Mayo: C$ 1,543.90</p>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">Ciclo Actual</div>
+                    <p class="text-sm font-bold text-slate-500 uppercase tracking-wider">Último Recibo</p>
+                    <p class="text-3xl font-black text-slate-800 mt-2" id="base-reading-display">0</p>
+                    <p class="text-sm mt-2 text-slate-500 border-t border-slate-100 pt-2" id="base-date-display">Corte: --/--/---- | C$ 0.00</p>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 h-fit lg:col-span-1">
-                    <h2 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2"><i class="fa-solid fa-plus-circle text-blue-500 mr-2"></i>Nueva Lectura</h2>
+                    <h2 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2"><i class="fa-solid fa-plus-circle text-blue-500 mr-2"></i>Nueva Lectura Diaria</h2>
                     <form id="reading-form" class="space-y-5">
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-1">Lectura del Medidor (kWh)</label>
-                            <input type="number" id="meter-reading" min="14612" step="1" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Ej. 14650" required>
+                            <input type="number" id="meter-reading" step="1" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Ej. 14650" required>
                             <p id="reading-error" class="text-red-500 text-xs mt-2 hidden font-medium"></p>
                         </div>
                         <button type="submit" class="w-full py-3 px-4 text-white bg-green-600 hover:bg-green-700 rounded-lg font-bold shadow-lg shadow-green-500/30 transition-all">
@@ -103,7 +109,7 @@
                 </div>
 
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 lg:col-span-2">
-                    <h2 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2"><i class="fa-solid fa-chart-simple text-blue-500 mr-2"></i>Tendencia de Consumo Diario</h2>
+                    <h2 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2"><i class="fa-solid fa-chart-simple text-blue-500 mr-2"></i>Consumo Neto por Día (kWh)</h2>
                     <div class="relative h-64 w-full">
                         <canvas id="consumptionChart"></canvas>
                     </div>
@@ -112,7 +118,7 @@
 
             <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
                 <div class="p-6 border-b border-slate-100">
-                    <h2 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-table-list text-blue-500 mr-2"></i>Historial de Registros</h2>
+                    <h2 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-table-list text-blue-500 mr-2"></i>Historial del Ciclo Actual</h2>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
@@ -120,24 +126,49 @@
                             <tr class="bg-slate-50 text-slate-500 text-sm uppercase tracking-wider">
                                 <th class="p-4 font-bold">Fecha y Hora</th>
                                 <th class="p-4 font-bold">Lectura (kWh)</th>
-                                <th class="p-4 font-bold text-right">Consumo Diario</th>
+                                <th class="p-4 font-bold text-right">Gasto de este día</th>
                             </tr>
                         </thead>
                         <tbody id="history-table-body" class="text-slate-700">
-                            </tbody>
+                        </tbody>
                     </table>
                 </div>
             </div>
-
         </main>
+    </div>
+
+    <div id="modal-recibo" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-slate-800">Iniciar Nuevo Mes</h2>
+                <button id="close-modal" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <p class="text-sm text-slate-500 mb-6">Al guardar un nuevo recibo, este será el nuevo punto de partida (Lectura Base) para calcular tus promedios actuales.</p>
+            <form id="form-recibo" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700">Fecha de Emisión del Recibo</label>
+                    <input type="date" id="recibo-fecha" class="mt-1 w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700">Lectura Actual (La que sale en el papel)</label>
+                    <input type="number" id="recibo-lectura" class="mt-1 w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700">Total Pagado (C$)</label>
+                    <input type="number" step="0.01" id="recibo-costo" class="mt-1 w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <button type="submit" class="w-full mt-4 py-3 px-4 text-white bg-blue-600 hover:bg-blue-700 rounded-lg font-bold shadow-lg shadow-blue-500/30 transition-all">
+                    Guardar y Reiniciar Ciclo
+                </button>
+            </form>
+        </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, doc, setDoc, getDoc, query, orderBy, onSnapshot, serverTimestamp, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // CONFIGURACIÓN EXACTA DE FIREBASE SOLICITADA
         const firebaseConfig = {
             apiKey: "AIzaSyBfNzelk3tDkCisFL60eQ5gooOqitVPZOY",
             authDomain: "registro-de-70697.firebaseapp.com",
@@ -151,165 +182,103 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Constante extraída del recibo
-        const LECTURA_BASE_MES = 14612;
-        let lecturaMasAlta = LECTURA_BASE_MES;
+        // Variables Globales de Configuración (Ciclo Actual)
+        let configBase = {
+            fecha: new Date('2026-05-07T00:00:00'),
+            lectura: 14612,
+            costoAnterior: 1543.90
+        };
+        let lecturaMasAlta = configBase.lectura;
+        let chartInstance = null;
 
-        // Referencias DOM
+        // Referencias UI
         const ui = {
             loginScreen: document.getElementById('login-screen'),
             dashboardScreen: document.getElementById('dashboard-screen'),
-            loginForm: document.getElementById('login-form'),
             readingForm: document.getElementById('reading-form'),
-            logoutBtn: document.getElementById('logout-btn'),
-            currentCost: document.getElementById('current-cost'),
-            currentCons: document.getElementById('current-consumption'),
-            avgKwh: document.getElementById('avg-kwh'),
-            avgCost: document.getElementById('avg-cost'),
-            projCost: document.getElementById('projected-cost'),
-            historyBody: document.getElementById('history-table-body'),
             readingInput: document.getElementById('meter-reading'),
-            readingError: document.getElementById('reading-error')
+            modal: document.getElementById('modal-recibo'),
+            formRecibo: document.getElementById('form-recibo')
         };
-        
-        let chartInstance = null;
 
-        // LÓGICA DE NEGOCIOS: Cálculo de Costos (Basado en bloques tarifarios)
+        // ==========================================
+        // LÓGICA DE NEGOCIOS EXACTA
+        // ==========================================
         function calcularCostoEstimado(kwh) {
             if (kwh <= 0) return 0;
             let costoEnergia = 0;
             
-            // Bloques escalonados
             if(kwh > 0) costoEnergia += Math.min(kwh, 25) * 2.48070;
             if(kwh > 25) costoEnergia += Math.min(kwh - 25, 25) * 5.93370;
             if(kwh > 50) costoEnergia += Math.min(kwh - 50, 50) * 6.22120;
             if(kwh > 100) costoEnergia += Math.min(kwh - 100, 38) * 8.26930; 
             if(kwh > 138) costoEnergia += (kwh - 138) * 8.38950;
 
-            // Cargos fijos (Aprox. según recibo)
             const cargosFijos = 93.93 + 105.03 + 13.27; 
             const subtotal = costoEnergia + cargosFijos;
-            const iva = subtotal * 0.15; // 15% IVA
+            const iva = subtotal * 0.15;
             
             return subtotal + iva;
         }
 
-        // CONTROL DEL SEMÁFORO (Alertas)
-        function actualizarSemaforo(kwh) {
-            const banner = document.getElementById('alert-banner');
-            const icon = document.getElementById('alert-icon');
-            const title = document.getElementById('alert-title');
-            const msg = document.getElementById('alert-message');
+        // ==========================================
+        // CARGA DE CONFIGURACIÓN DEL RECIBO (CICLO)
+        // ==========================================
+        async function cargarConfiguracion() {
+            const docRef = doc(db, "configuracion", "ciclo_actual");
+            const docSnap = await getDoc(docRef);
 
-            // Resetear clases de color
-            banner.classList.remove('bg-green-500', 'bg-yellow-500', 'bg-red-500');
-            icon.className = '';
-
-            if (kwh < 100) {
-                banner.classList.add('bg-green-500');
-                icon.className = 'fa-solid fa-leaf text-2xl';
-                title.textContent = 'Consumo Óptimo';
-                msg.textContent = 'Mantienes un excelente ritmo. ¡Sigue así!';
-            } else if (kwh >= 100 && kwh < 150) {
-                banner.classList.add('bg-yellow-500');
-                icon.className = 'fa-solid fa-triangle-exclamation text-2xl';
-                title.textContent = 'Consumo Moderado';
-                msg.textContent = 'Cuidado, te acercas a la barrera de los 150 kWh donde la tarifa sube.';
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                configBase.fecha = new Date(data.fecha_base + "T00:00:00");
+                configBase.lectura = data.lectura_base;
+                configBase.costoAnterior = data.costo_anterior;
             } else {
-                banner.classList.add('bg-red-500');
-                icon.className = 'fa-solid fa-radiation text-2xl';
-                title.textContent = 'Alerta de Alto Consumo';
-                msg.textContent = 'Has superado los 150 kWh. Estás en el bloque tarifario más caro.';
+                // Si no existe, creamos la base con los datos de tu PDF original de Mayo
+                await setDoc(docRef, {
+                    fecha_base: "2026-05-07",
+                    lectura_base: 14612,
+                    costo_anterior: 1543.90
+                });
             }
+
+            // Actualizar Tarjeta de Último Recibo
+            document.getElementById('base-reading-display').textContent = configBase.lectura.toLocaleString();
+            document.getElementById('base-date-display').textContent = `Corte: ${configBase.fecha.toLocaleDateString('es-NI')} | C$ ${configBase.costoAnterior.toLocaleString('es-NI', {minimumFractionDigits:2})}`;
+            
+            // Una vez cargada la config, cargamos las lecturas de ESTE ciclo
+            cargarLecturasDelCiclo();
         }
 
-        // AUTENTICACIÓN
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                ui.loginScreen.classList.add('hidden');
-                ui.dashboardScreen.classList.remove('hidden');
-                cargarDatos();
-            } else {
-                ui.loginScreen.classList.remove('hidden');
-                ui.dashboardScreen.classList.add('hidden');
-            }
-        });
-
-        ui.loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            try {
-                await signInWithEmailAndPassword(auth, email, password);
-            } catch (error) {
-                const errEl = document.getElementById('login-error');
-                errEl.textContent = "Correo o contraseña incorrectos.";
-                errEl.classList.remove('hidden');
-            }
-        });
-
-        ui.logoutBtn.addEventListener('click', () => signOut(auth));
-
-        // GUARDAR LECTURA CON VALIDACIÓN
-        ui.readingForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const valor = parseInt(ui.readingInput.value);
-            
-            // Validación para no meter números menores a la última lectura
-            if (valor <= lecturaMasAlta) {
-                ui.readingError.textContent = `La lectura debe ser mayor a la última registrada (${lecturaMasAlta}).`;
-                ui.readingError.classList.remove('hidden');
-                return;
-            }
-            ui.readingError.classList.add('hidden');
-
-            const ahora = new Date();
-            try {
-                await addDoc(collection(db, "lecturas"), {
-                    valor: valor,
-                    fecha_str: ahora.toLocaleDateString('es-NI'),
-                    hora_str: ahora.toLocaleTimeString('es-NI', { hour: '2-digit', minute: '2-digit' }),
-                    timestamp: serverTimestamp()
-                });
-                ui.readingForm.reset();
-            } catch (error) {
-                console.error("Error: ", error);
-                alert("Error al guardar en la base de datos.");
-            }
-        });
-
-        // CARGA Y PROCESAMIENTO DE DATOS EN TIEMPO REAL
-        function cargarDatos() {
-            const q = query(collection(db, "lecturas"), orderBy("timestamp", "asc"));
+        // ==========================================
+        // PROCESAR LECTURAS
+        // ==========================================
+        function cargarLecturasDelCiclo() {
+            // Solo traer lecturas mayores o iguales a la lectura base
+            const q = query(collection(db, "lecturas"), where("valor", ">", configBase.lectura), orderBy("valor", "asc"));
             
             onSnapshot(q, (snapshot) => {
                 const labels = [];
                 const dataPoints = [];
                 let historyHTML = '';
-                let tempLectura = LECTURA_BASE_MES;
-                let diasRegistrados = snapshot.size;
-
-                // Para evitar errores en caso de no haber datos aún
-                if (snapshot.empty) {
-                    actualizarUI(0, 0, 0, 0);
-                    return;
-                }
-
-                // Generar tabla y datos para el gráfico invirtiendo el orden para la tabla (más reciente arriba)
+                let tempLectura = configBase.lectura;
                 const docs = [];
+                
                 snapshot.forEach(doc => docs.push(doc.data()));
 
-                docs.forEach((data, index) => {
-                    labels.push(data.fecha_str);
+                // Gráfico (Orden ascendente)
+                docs.forEach(data => {
+                    labels.push(data.fecha_str.substring(0,5)); // Solo dd/mm
                     const consumoDelDia = data.valor - tempLectura;
-                    dataPoints.push(consumoDelDia > 0 ? consumoDelDia : 0);
+                    dataPoints.push(consumoDelDia);
                     tempLectura = data.valor;
                 });
 
-                // Construir tabla de historial (orden descendente visualmente)
+                // Tabla Historial (Invertido, más reciente primero)
                 for (let i = docs.length - 1; i >= 0; i--) {
                     const data = docs[i];
-                    const consumoDiario = i === 0 ? (data.valor - LECTURA_BASE_MES) : (data.valor - docs[i-1].valor);
+                    const lecturaAnteriorDeEsteDia = i === 0 ? configBase.lectura : docs[i-1].valor;
+                    const consumoDiario = data.valor - lecturaAnteriorDeEsteDia;
                     
                     historyHTML += `
                         <tr class="border-b border-slate-50 hover:bg-slate-50 transition-colors">
@@ -320,68 +289,174 @@
                     `;
                 }
 
-                // Actualizar UI
+                // MATEMÁTICA CORREGIDA PARA PROMEDIOS
                 lecturaMasAlta = tempLectura;
-                const consumoTotal = lecturaMasAlta - LECTURA_BASE_MES;
-                const costoTotal = calcularCostoEstimado(consumoTotal);
+                const consumoTotal = lecturaMasAlta - configBase.lectura;
+                const costoTotalActual = calcularCostoEstimado(consumoTotal);
                 
-                // Promedios
-                const promDiarioKwh = diasRegistrados > 0 ? (consumoTotal / diasRegistrados) : 0;
-                const promDiarioCost = diasRegistrados > 0 ? (costoTotal / diasRegistrados) : 0;
-                const proyeccionMes = promDiarioCost * 30;
+                // Calcular días transcurridos REALES desde la fecha del recibo
+                const hoy = new Date();
+                const msPorDia = 1000 * 60 * 60 * 24;
+                let diasTranscurridos = (hoy.getTime() - configBase.fecha.getTime()) / msPorDia;
+                // Redondear días y evitar división por cero si se mete lectura el mismo día del corte
+                diasTranscurridos = Math.max(1, Math.floor(diasTranscurridos)); 
 
-                ui.currentCons.innerHTML = `<span class="text-blue-600 bg-blue-50 px-2 py-1 rounded font-bold">${consumoTotal} kWh</span> este mes`;
-                ui.currentCost.textContent = `C$ ${costoTotal.toLocaleString('es-NI', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-                ui.avgKwh.textContent = promDiarioKwh.toFixed(1);
-                ui.avgCost.textContent = `~ C$ ${promDiarioCost.toFixed(2)} / día`;
-                ui.projCost.textContent = `C$ ${proyeccionMes.toLocaleString('es-NI', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                const promDiarioKwh = consumoTotal / diasTranscurridos;
                 
-                ui.historyBody.innerHTML = historyHTML;
-                ui.readingInput.min = lecturaMasAlta + 1; // Actualizar el mínimo del input
+                // PROYECCIÓN INTELIGENTE: Proyectar kWh a 30 días, LUEGO calcular costo
+                const proyeccionKwh30Dias = promDiarioKwh * 30;
+                const proyeccionCostoMes = calcularCostoEstimado(proyeccionKwh30Dias);
 
-                actualizarSemaforo(consumoTotal);
+                // Imprimir en pantalla
+                document.getElementById('current-consumption').innerHTML = `<span class="text-blue-600 bg-blue-50 px-2 py-1 rounded font-bold">${consumoTotal} kWh</span> consumidos`;
+                document.getElementById('current-cost').textContent = `C$ ${costoTotalActual.toLocaleString('es-NI', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                
+                document.getElementById('avg-kwh').textContent = promDiarioKwh.toFixed(1);
+                document.getElementById('dias-ciclo').textContent = `Días transcurridos: ${diasTranscurridos}`;
+                
+                document.getElementById('projected-kwh').textContent = `~ ${Math.round(proyeccionKwh30Dias)} kWh al final del ciclo`;
+                document.getElementById('projected-cost').textContent = `C$ ${proyeccionCostoMes.toLocaleString('es-NI', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                
+                document.getElementById('history-table-body').innerHTML = historyHTML;
+                ui.readingInput.min = lecturaMasAlta + 1;
+
+                actualizarSemaforo(consumoTotal, proyeccionKwh30Dias);
                 actualizarGrafico(labels, dataPoints);
             });
         }
 
-        // DIBUJAR GRÁFICO CON CHART.JS
+        // ==========================================
+        // FUNCIONES AUXILIARES Y EVENTOS
+        // ==========================================
+
+        function actualizarSemaforo(consumoActual, proyeccionMensual) {
+            const banner = document.getElementById('alert-banner');
+            const title = document.getElementById('alert-title');
+            const msg = document.getElementById('alert-message');
+
+            banner.classList.remove('bg-green-500', 'bg-yellow-500', 'bg-red-500');
+
+            if (proyeccionMensual < 120) {
+                banner.classList.add('bg-green-500');
+                title.textContent = 'Proyección Excelente';
+                msg.textContent = 'A este ritmo cerrarás el mes en el bloque tarifario más barato.';
+            } else if (proyeccionMensual >= 120 && proyeccionMensual < 150) {
+                banner.classList.add('bg-yellow-500');
+                title.textContent = 'Consumo Moderado';
+                msg.textContent = 'Ritmo estable, pero ten cuidado de no cruzar la barrera de los 150 kWh mensuales.';
+            } else {
+                banner.classList.add('bg-red-500');
+                title.textContent = 'Alerta: Tarifa Alta';
+                msg.textContent = 'Tu proyección supera los 150 kWh/mes. El costo de la energía se ha encarecido significativamente.';
+            }
+        }
+
         function actualizarGrafico(labels, data) {
             const ctx = document.getElementById('consumptionChart').getContext('2d');
-            
             if (chartInstance) chartInstance.destroy();
-
             chartInstance = new Chart(ctx, {
-                type: 'line',
+                type: 'bar', // Cambiado a barras para ver el salto diario más claro
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Consumo Diario (kWh)',
+                        label: 'kWh Consumidos en el día',
                         data: data,
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        borderColor: '#2563eb',
-                        borderWidth: 3,
-                        pointBackgroundColor: '#2563eb',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 5,
-                        fill: true,
-                        tension: 0.4
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 4
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
-                    scales: {
-                        y: { 
-                            beginAtZero: true,
-                            grid: { borderDash: [5, 5], color: '#f1f5f9' }
-                        },
-                        x: { grid: { display: false } }
-                    }
+                    scales: { y: { beginAtZero: true } }
                 }
             });
         }
+
+        // Guardar Nueva Lectura Diaria
+        ui.readingForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const valor = parseInt(ui.readingInput.value);
+            const err = document.getElementById('reading-error');
+            
+            if (valor <= lecturaMasAlta) {
+                err.textContent = `Debe ser mayor a la última lectura (${lecturaMasAlta}).`;
+                err.classList.remove('hidden');
+                return;
+            }
+            err.classList.add('hidden');
+
+            const ahora = new Date();
+            try {
+                await addDoc(collection(db, "lecturas"), {
+                    valor: valor,
+                    fecha_str: ahora.toLocaleDateString('es-NI'),
+                    hora_str: ahora.toLocaleTimeString('es-NI', { hour: '2-digit', minute: '2-digit' }),
+                    timestamp: serverTimestamp()
+                });
+                ui.readingForm.reset();
+            } catch (error) { alert("Error al guardar."); }
+        });
+
+        // Eventos del Modal de Nuevo Recibo
+        document.getElementById('btn-config-recibo').addEventListener('click', () => {
+            ui.modal.classList.remove('hidden');
+            ui.modal.classList.add('flex');
+        });
+        
+        document.getElementById('close-modal').addEventListener('click', () => {
+            ui.modal.classList.add('hidden');
+            ui.modal.classList.remove('flex');
+        });
+
+        ui.formRecibo.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fecha = document.getElementById('recibo-fecha').value;
+            const lectura = parseInt(document.getElementById('recibo-lectura').value);
+            const costo = parseFloat(document.getElementById('recibo-costo').value);
+
+            try {
+                await setDoc(doc(db, "configuracion", "ciclo_actual"), {
+                    fecha_base: fecha,
+                    lectura_base: lectura,
+                    costo_anterior: costo
+                });
+                ui.modal.classList.add('hidden');
+                ui.modal.classList.remove('flex');
+                ui.formRecibo.reset();
+                cargarConfiguracion(); // Recargar todo el dashboard con el nuevo ciclo
+                alert("¡Nuevo mes iniciado correctamente!");
+            } catch (error) {
+                console.error(error);
+                alert("Hubo un error guardando el recibo.");
+            }
+        });
+
+        // Autenticación Init
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                ui.loginScreen.classList.add('hidden');
+                ui.dashboardScreen.classList.remove('hidden');
+                cargarConfiguracion(); // Arranca la maquinaria
+            } else {
+                ui.loginScreen.classList.remove('hidden');
+                ui.dashboardScreen.classList.add('hidden');
+            }
+        });
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                await signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value);
+            } catch (error) {
+                document.getElementById('login-error').textContent = "Credenciales incorrectas.";
+                document.getElementById('login-error').classList.remove('hidden');
+            }
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
     </script>
 </body>
 </html>
+
